@@ -33,8 +33,7 @@ FILENAME_REGEX = re.compile(r"^[^\\\/]*\.(\w{3,4})$")
 appFarm = dict()
 
 '''SCRA 06.10.21: Allow classes to implement "to_json" and get json serializable'''
-
-
+'''Will re-write this application to an actual language soon...'''
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
 

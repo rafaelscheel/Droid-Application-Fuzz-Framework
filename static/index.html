@@ -25,11 +25,20 @@
 				</h1>
 			</div>
 		</div>
-		<div class="col-md-8 col-md-offset-2">
+		<div class="col-md-1">
+		</div>
+		<div class="col-md-7">
 			<div class="form-group">
 				<label for="status">Status</label>
 	  			<textarea class="form-control" rows="5" id="status" disabled></textarea>				   
 					
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="form-group">
+				<label for="apps">Apps</label>
+	  			<textarea class="form-control" rows="5" id="apps" disabled></textarea>
+
 			</div>
 		</div>
 	</div>
@@ -161,8 +170,15 @@
   </body>
   <script type="text/javascript">
   	function write_status(message){
-  		$('#status').append(message + "\n"); 
+  		$('#status').append(message + "\n");
     	$('#status').scrollTop($('#status')[0].scrollHeight);
+  	}
+  	function write_apps(message){
+  		$('#apps').append(message + "\n");
+    	$('#apps').scrollTop($('#apps')[0].scrollHeight);
+  	}
+  	function flush_apps(message){
+  		$('#apps').html("");
   	}
   	function check_fuzzer(){
   	  var fuzzer = $('input[name=component]:checked', '#fuzz_form').val();
@@ -224,6 +240,18 @@
 			});
 
     	}, 60000);
+  	});
+  	    $(document).ready(function() {
+    	setInterval(function(){
+    		$.getJSON( "/apps", function( data ) {
+				var appNames = [];
+				flush_apps();
+				$.each( data, function( key, val ) {
+    			appNames.push(key);
+    			write_apps(key);
+  				});
+			});
+    	}, 5000);
   	});
   </script>
 </html>
