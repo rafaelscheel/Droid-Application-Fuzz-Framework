@@ -11,6 +11,10 @@ ADB_BINARY = "adb"
 CRASH_IDENTIFIERS = ['SIGSEGV', 'SIGFPE', 'SIGILL']
 
 
+##### File Generator #####
+FUZZ_FILE_FOLDER = "generators/office/fuzzfiles"
+FUZZ_FILE_BUFFER = 15
+
 
 # Fuzz Targets
 BROWSERS = ["com.android.chrome", "org.mozilla.firefox",
