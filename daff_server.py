@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import atexit
+from AppCommunication.app import App
+from distutils import util
 
 from flask import (
     Flask,
@@ -23,10 +25,63 @@ from pdf_fuzz import (
 
 import settings
 import utils
+from json import JSONEncoder
 
 sys.tracebacklimit = 0
 APP = Flask(__name__)
 FILENAME_REGEX = re.compile(r"^[^\\\/]*\.(\w{3,4})$")
+appFarm = dict()
+
+'''SCRA 06.10.21: Allow classes to implement "to_json" and get json serializable'''
+
+
+def _default(self, obj):
+    return getattr(obj.__class__, "to_json", _default.default)(obj)
+
+
+_default.default = JSONEncoder().default
+JSONEncoder.default = _default
+
+
+@APP.route('/register')
+def app_register():
+    appFarm[utils.stripAllExceptAlphanumericAndDot(request.args.get('deviceID'))] = App(
+        utils.stripAllExceptAlphanumericAndDot(request.args.get('deviceID')),
+        utils.stripAllExceptAlphanumericAndDot(request.args.get('ip')),
+        int(request.args.get('port')),
+        utils.stripAllExceptAlphanumericAndDot(request.args.get('package')),
+        utils.stripAllExceptAlphanumericAndDot(request.args.get('intentLauncher')),
+        bool(util.strtobool(request.args.get('ready')))
+    )
+    return appFarm[utils.stripAllExceptAlphanumericAndDot(request.args.get('deviceID'))].asHTML()
+
+
+@APP.route('/apps')
+def app_list():
+    return appFarm
+
+
+@APP.route('/app')
+def app_get():
+    if appFarm.has_key(request.args.get('deviceID')):
+        return appFarm[request.args.get('deviceID')].to_json()
+    abort(404)
+
+
+@APP.route('/appRemove')
+def app_remove():
+    if appFarm.has_key(request.args.get('deviceID')):
+        del appFarm[request.args.get('deviceID')]
+        return "deleted"
+    abort(404)
+
+
+@APP.route('/appUpdateStatus')
+def app_update_status():
+    if appFarm.has_key(request.args.get('deviceID')):
+        appFarm[request.args.get('deviceID')].ready = bool(util.strtobool(request.args.get('ready')))
+        return appFarm[request.args.get('deviceID')].to_json()
+    abort(404)
 
 
 @APP.route('/html/<filename>')
@@ -111,17 +166,20 @@ def shutdown():
     func()
     return 'Server shutting down...'
 
+
 @APP.route('/js/<path:path>')
 def send_js(path):
     js_dir = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "static", "js")
+        os.path.realpath(__file__)), "static", "js")
     return send_from_directory(js_dir, path)
+
 
 @APP.route('/css/<path:path>')
 def send_css(path):
     css_dir = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "static", "css")
+        os.path.realpath(__file__)), "static", "css")
     return send_from_directory(css_dir, path)
+
 
 @APP.route('/', methods=['GET'])
 def main():
@@ -129,8 +187,10 @@ def main():
     with open('static/index.html', 'r') as filep:
         return filep.read()
 
+
 def cleanup():
     utils.adb_kill()
+
 
 if __name__ == '__main__':
     atexit.register(cleanup)

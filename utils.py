@@ -1,6 +1,8 @@
 import os
 import subprocess
 import settings
+import re
+import json
 
 
 def adb_connection_int(apps):
@@ -38,3 +40,13 @@ def make_dirs():
         os.makedirs(fuzz_out_dir)
     if not os.path.exists(valid_crash_dir):
         os.makedirs(valid_crash_dir)
+
+
+def stripAllExceptAlphanumericAndDot(string):
+        return re.sub('[^A-Za-z0-9\.]+', '', string)
+
+
+def jprint(obj):
+    # create a formatted string of the Python JSON object
+    text = json.dumps(obj, sort_keys=True, indent=4)
+    print(text)
